@@ -45,8 +45,8 @@ apt install -y \
     libssl-dev \
     libffi-dev \
     python3-dev \
-    net-snmp \
-    net-snmp-utils \
+    snmp \
+    snmpd \
     nginx \
     redis-server \
     postgresql \
