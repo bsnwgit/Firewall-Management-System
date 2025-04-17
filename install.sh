@@ -30,11 +30,52 @@ check_command() {
     fi
 }
 
+# Function to verify package installation
+verify_package() {
+    if ! dpkg -l | grep -q "^ii  $1 "; then
+        print_error "Package $1 not installed properly"
+        return 1
+    fi
+    return 0
+}
+
+# Function to check system requirements
+check_system_requirements() {
+    print_message "Checking system requirements..."
+    
+    # Check Ubuntu version
+    if [ ! -f /etc/os-release ]; then
+        print_error "Not running on Ubuntu"
+        exit 1
+    fi
+    
+    . /etc/os-release
+    if [ "$VERSION_ID" != "22.04" ]; then
+        print_warning "This script is designed for Ubuntu 22.04. You are running $VERSION_ID"
+    fi
+    
+    # Check disk space
+    FREE_SPACE=$(df -h / | awk 'NR==2 {print $4}')
+    if [ ${FREE_SPACE%G} -lt 10 ]; then
+        print_error "Insufficient disk space. Need at least 10GB free"
+        exit 1
+    fi
+    
+    # Check memory
+    TOTAL_MEM=$(free -g | awk '/^Mem:/{print $2}')
+    if [ $TOTAL_MEM -lt 4 ]; then
+        print_warning "Low memory. Recommended at least 4GB RAM"
+    fi
+}
+
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
     print_error "Please run as root"
     exit 1
 fi
+
+# Check system requirements
+check_system_requirements
 
 # Update system
 print_message "Updating system packages..."
@@ -43,15 +84,44 @@ check_command "System update"
 
 # Install required system packages
 print_message "Installing system dependencies..."
-apt install -y python3 python3-pip python3-full git build-essential libssl-dev libffi-dev python3-dev curl wget unzip make gcc g++ snmp snmpd tcpdump net-tools iproute2 iptables nginx redis-server postgresql postgresql-contrib libpq-dev libsnmp-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype-dev libblas-dev liblapack-dev libatlas-base-dev gfortran python3-pysnmp4 python3-psycopg2 python3-redis python3-flask python3-flask-sqlalchemy python3-flask-migrate python3-flask-cors python3-jwt python3-cryptography python3-pandas python3-numpy python3-matplotlib python3-seaborn python3-scipy python3-requests python3-paramiko python3-netaddr python3-yaml python3-jinja2 python3-markupsafe python3-werkzeug python3-click python3-itsdangerous python3-six python3-dateutil python3-urllib3 python3-chardet python3-certifi python3-idna python3-requests-oauthlib python3-oauthlib python3-bcrypt python3-cffi python3-pycparser python3-asn1crypto python3-cryptography python3-future python3-pytz python3-ipaddress python3-enum34 python3-typing python3-configparser python3-pathlib2 python3-scandir logrotate rsyslog htop iotop iftop nethogs ufw fail2ban rsync ntp sysstat supervisor
+apt install -y python3 python3-pip python3-full git build-essential libssl-dev libffi-dev python3-dev curl wget unzip make gcc g++ snmp snmpd tcpdump net-tools iproute2 iptables nginx redis-server postgresql postgresql-contrib libpq-dev libsnmp-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype-dev libblas-dev liblapack-dev libatlas-base-dev gfortran python3-pysnmp4 python3-psycopg2 python3-redis python3-flask python3-flask-sqlalchemy python3-flask-migrate python3-flask-cors python3-jwt python3-cryptography python3-pandas python3-numpy python3-matplotlib python3-seaborn python3-scipy python3-requests python3-paramiko python3-netaddr python3-yaml python3-jinja2 python3-markupsafe python3-werkzeug python3-click python3-itsdangerous python3-six python3-dateutil python3-urllib3 python3-chardet python3-certifi python3-idna python3-requests-oauthlib python3-oauthlib python3-bcrypt python3-cffi python3-pycparser python3-asn1crypto python3-cryptography python3-future python3-pytz python3-configparser python3-pathlib2 python3-scandir logrotate rsyslog htop iotop iftop nethogs ufw fail2ban rsync ntp sysstat supervisor
 check_command "System dependencies installation"
+
+# Verify critical packages
+print_message "Verifying critical packages..."
+verify_package python3
+verify_package python3-pip
+verify_package nginx
+verify_package postgresql
+verify_package redis-server
+verify_package nodejs
+
+# Install pipx for isolated Python package installation
+print_message "Installing pipx..."
+apt install -y pipx
+pipx ensurepath
+check_command "pipx installation"
+
+# Install additional Python packages using pipx
+print_message "Installing additional Python packages..."
+for package in pytz ipaddress enum34 typing configparser pathlib2 scandir; do
+    if ! pipx list | grep -q $package; then
+        pipx install $package || print_warning "Failed to install $package with pipx"
+    else
+        print_message "$package already installed with pipx"
+    fi
+done
 
 # Install Node.js and npm from NodeSource
 print_message "Installing Node.js and npm..."
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-check_command "NodeSource setup"
-apt install -y nodejs
-check_command "Node.js installation"
+if ! command -v node &> /dev/null; then
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    check_command "NodeSource setup"
+    apt install -y nodejs
+    check_command "Node.js installation"
+else
+    print_message "Node.js already installed"
+fi
 
 # Verify Node.js and npm installation
 print_message "Verifying Node.js and npm installation..."
@@ -81,7 +151,10 @@ if [ -f "backend/requirements.txt" ]; then
     # Convert requirements.txt to apt packages
     while IFS= read -r line; do
         package=$(echo "$line" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1)
-        apt install -y "python3-${package}" || print_warning "Package python3-${package} not found in repositories"
+        if ! apt install -y "python3-${package}" 2>/dev/null; then
+            print_warning "Package python3-${package} not found in repositories, trying pipx..."
+            pipx install $package || print_warning "Failed to install $package"
+        fi
     done < backend/requirements.txt
 else
     print_error "requirements.txt not found"
@@ -93,7 +166,7 @@ check_command "Python dependencies installation"
 print_message "Installing Node.js dependencies..."
 if [ -d "frontend" ]; then
     cd frontend
-    npm install
+    npm install --no-audit --no-fund
     cd ..
 else
     print_error "frontend directory not found"
@@ -103,6 +176,12 @@ check_command "Node.js dependencies installation"
 
 # Configure PostgreSQL
 print_message "Configuring PostgreSQL..."
+if ! sudo -u postgres psql -c "SELECT 1" &>/dev/null; then
+    print_error "PostgreSQL service not running"
+    systemctl start postgresql
+    sleep 2
+fi
+
 sudo -u postgres psql -c "CREATE DATABASE network_monitoring;" || print_warning "Database might already exist"
 sudo -u postgres psql -c "CREATE USER network_monitoring WITH PASSWORD 'your_secure_password';" || print_warning "User might already exist"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE network_monitoring TO network_monitoring;"
