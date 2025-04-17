@@ -46,7 +46,7 @@ A comprehensive network monitoring solution that provides real-time monitoring, 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-repo/network-monitoring.git
+git clone https://github.com/bsnwgit/network-monitoring.git
 cd network-monitoring
 ```
 
