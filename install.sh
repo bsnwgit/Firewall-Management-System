@@ -35,22 +35,173 @@ apt update && apt upgrade -y
 # Install required system packages
 print_message "Installing system dependencies..."
 apt install -y \
+    # System and development tools
     python3 \
     python3-pip \
     python3-venv \
-    nodejs \
-    npm \
     git \
     build-essential \
     libssl-dev \
     libffi-dev \
     python3-dev \
+    curl \
+    wget \
+    unzip \
+    make \
+    gcc \
+    g++ \
+    # Network monitoring tools
     snmp \
     snmpd \
+    tcpdump \
+    net-tools \
+    iproute2 \
+    iptables \
+    # Web server and database
     nginx \
     redis-server \
     postgresql \
-    postgresql-contrib
+    postgresql-contrib \
+    # Python database and system libraries
+    libpq-dev \
+    libsnmp-dev \
+    libffi-dev \
+    libssl-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    libblas-dev \
+    liblapack-dev \
+    libatlas-base-dev \
+    gfortran \
+    # Python packages
+    python3-snmp \
+    python3-psycopg2 \
+    python3-redis \
+    python3-flask \
+    python3-flask-sqlalchemy \
+    python3-flask-migrate \
+    python3-flask-cors \
+    python3-jwt \
+    python3-cryptography \
+    python3-pandas \
+    python3-numpy \
+    python3-matplotlib \
+    python3-seaborn \
+    python3-scipy \
+    python3-requests \
+    python3-paramiko \
+    python3-netaddr \
+    python3-yaml \
+    python3-jinja2 \
+    python3-markupsafe \
+    python3-werkzeug \
+    python3-click \
+    python3-itsdangerous \
+    python3-six \
+    python3-dateutil \
+    python3-pytz \
+    python3-urllib3 \
+    python3-chardet \
+    python3-certifi \
+    python3-idna \
+    python3-requests-oauthlib \
+    python3-oauthlib \
+    python3-bcrypt \
+    python3-cffi \
+    python3-pycparser \
+    python3-asn1crypto \
+    python3-cryptography \
+    python3-idna \
+    python3-ipaddress \
+    python3-enum34 \
+    python3-typing \
+    python3-future \
+    python3-configparser \
+    python3-contextlib2 \
+    python3-pathlib2 \
+    python3-scandir \
+    python3-singledispatch \
+    # Monitoring and logging
+    logrotate \
+    rsyslog \
+    # System utilities
+    htop \
+    iotop \
+    iftop \
+    nethogs \
+    # Security tools
+    ufw \
+    fail2ban \
+    # Backup tools
+    rsync \
+    # Time synchronization
+    ntp \
+    # System monitoring
+    sysstat \
+    # Process management
+    supervisor
+
+# Install Node.js and npm from NodeSource
+print_message "Installing Node.js and npm..."
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y nodejs
+
+# Install additional Node.js packages
+print_message "Installing additional Node.js packages..."
+npm install -g \
+    pm2 \
+    nodemon \
+    typescript \
+    @types/node \
+    @types/react \
+    @types/react-dom \
+    eslint \
+    prettier \
+    webpack \
+    webpack-cli \
+    babel-loader \
+    @babel/core \
+    @babel/preset-env \
+    @babel/preset-react \
+    css-loader \
+    style-loader \
+    file-loader \
+    url-loader \
+    html-webpack-plugin \
+    clean-webpack-plugin \
+    mini-css-extract-plugin \
+    optimize-css-assets-webpack-plugin \
+    terser-webpack-plugin \
+    compression-webpack-plugin \
+    webpack-bundle-analyzer \
+    webpack-dev-server \
+    react \
+    react-dom \
+    react-router-dom \
+    @mui/material \
+    @mui/icons-material \
+    @emotion/react \
+    @emotion/styled \
+    chart.js \
+    react-chartjs-2 \
+    axios \
+    socket.io-client \
+    moment \
+    lodash \
+    formik \
+    yup \
+    @reduxjs/toolkit \
+    react-redux \
+    redux-thunk \
+    redux-logger
+
+# Verify Node.js and npm installation
+print_message "Verifying Node.js and npm installation..."
+node --version
+npm --version
 
 # Create project directory
 print_message "Creating project directory..."
