@@ -22,6 +22,14 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Function to check command success
+check_command() {
+    if [ $? -ne 0 ]; then
+        print_error "Command failed: $1"
+        exit 1
+    fi
+}
+
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
     print_error "Please run as root"
@@ -31,207 +39,78 @@ fi
 # Update system
 print_message "Updating system packages..."
 apt update && apt upgrade -y
+check_command "System update"
 
 # Install required system packages
 print_message "Installing system dependencies..."
-apt install -y \
-    # System and development tools
-    python3 \
-    python3-pip \
-    python3-venv \
-    git \
-    build-essential \
-    libssl-dev \
-    libffi-dev \
-    python3-dev \
-    curl \
-    wget \
-    unzip \
-    make \
-    gcc \
-    g++ \
-    # Network monitoring tools
-    snmp \
-    snmpd \
-    tcpdump \
-    net-tools \
-    iproute2 \
-    iptables \
-    # Web server and database
-    nginx \
-    redis-server \
-    postgresql \
-    postgresql-contrib \
-    # Python database and system libraries
-    libpq-dev \
-    libsnmp-dev \
-    libffi-dev \
-    libssl-dev \
-    libxml2-dev \
-    libxslt1-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    libblas-dev \
-    liblapack-dev \
-    libatlas-base-dev \
-    gfortran \
-    # Python packages
-    python3-snmp \
-    python3-psycopg2 \
-    python3-redis \
-    python3-flask \
-    python3-flask-sqlalchemy \
-    python3-flask-migrate \
-    python3-flask-cors \
-    python3-jwt \
-    python3-cryptography \
-    python3-pandas \
-    python3-numpy \
-    python3-matplotlib \
-    python3-seaborn \
-    python3-scipy \
-    python3-requests \
-    python3-paramiko \
-    python3-netaddr \
-    python3-yaml \
-    python3-jinja2 \
-    python3-markupsafe \
-    python3-werkzeug \
-    python3-click \
-    python3-itsdangerous \
-    python3-six \
-    python3-dateutil \
-    python3-pytz \
-    python3-urllib3 \
-    python3-chardet \
-    python3-certifi \
-    python3-idna \
-    python3-requests-oauthlib \
-    python3-oauthlib \
-    python3-bcrypt \
-    python3-cffi \
-    python3-pycparser \
-    python3-asn1crypto \
-    python3-cryptography \
-    python3-idna \
-    python3-ipaddress \
-    python3-enum34 \
-    python3-typing \
-    python3-future \
-    python3-configparser \
-    python3-contextlib2 \
-    python3-pathlib2 \
-    python3-scandir \
-    python3-singledispatch \
-    # Monitoring and logging
-    logrotate \
-    rsyslog \
-    # System utilities
-    htop \
-    iotop \
-    iftop \
-    nethogs \
-    # Security tools
-    ufw \
-    fail2ban \
-    # Backup tools
-    rsync \
-    # Time synchronization
-    ntp \
-    # System monitoring
-    sysstat \
-    # Process management
-    supervisor
+apt install -y python3 python3-pip python3-venv git build-essential libssl-dev libffi-dev python3-dev curl wget unzip make gcc g++ snmp snmpd tcpdump net-tools iproute2 iptables nginx redis-server postgresql postgresql-contrib libpq-dev libsnmp-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype6-dev libblas-dev liblapack-dev libatlas-base-dev gfortran python3-snmp python3-psycopg2 python3-redis python3-flask python3-flask-sqlalchemy python3-flask-migrate python3-flask-cors python3-jwt python3-cryptography python3-pandas python3-numpy python3-matplotlib python3-seaborn python3-scipy python3-requests python3-paramiko python3-netaddr python3-yaml python3-jinja2 python3-markupsafe python3-werkzeug python3-click python3-itsdangerous python3-six python3-dateutil python3-pytz python3-urllib3 python3-chardet python3-certifi python3-idna python3-requests-oauthlib python3-oauthlib python3-bcrypt python3-cffi python3-pycparser python3-asn1crypto python3-cryptography python3-idna python3-ipaddress python3-enum34 python3-typing python3-future python3-configparser python3-contextlib2 python3-pathlib2 python3-scandir python3-singledispatch logrotate rsyslog htop iotop iftop nethogs ufw fail2ban rsync ntp sysstat supervisor
+check_command "System dependencies installation"
 
 # Install Node.js and npm from NodeSource
 print_message "Installing Node.js and npm..."
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+check_command "NodeSource setup"
 apt install -y nodejs
-
-# Install additional Node.js packages
-print_message "Installing additional Node.js packages..."
-npm install -g \
-    pm2 \
-    nodemon \
-    typescript \
-    @types/node \
-    @types/react \
-    @types/react-dom \
-    eslint \
-    prettier \
-    webpack \
-    webpack-cli \
-    babel-loader \
-    @babel/core \
-    @babel/preset-env \
-    @babel/preset-react \
-    css-loader \
-    style-loader \
-    file-loader \
-    url-loader \
-    html-webpack-plugin \
-    clean-webpack-plugin \
-    mini-css-extract-plugin \
-    optimize-css-assets-webpack-plugin \
-    terser-webpack-plugin \
-    compression-webpack-plugin \
-    webpack-bundle-analyzer \
-    webpack-dev-server \
-    react \
-    react-dom \
-    react-router-dom \
-    @mui/material \
-    @mui/icons-material \
-    @emotion/react \
-    @emotion/styled \
-    chart.js \
-    react-chartjs-2 \
-    axios \
-    socket.io-client \
-    moment \
-    lodash \
-    formik \
-    yup \
-    @reduxjs/toolkit \
-    react-redux \
-    redux-thunk \
-    redux-logger
+check_command "Node.js installation"
 
 # Verify Node.js and npm installation
 print_message "Verifying Node.js and npm installation..."
 node --version
 npm --version
+check_command "Node.js verification"
 
 # Create project directory
 print_message "Creating project directory..."
 mkdir -p /opt/network-monitoring
 cd /opt/network-monitoring
+check_command "Project directory creation"
 
 # Clone repository
 print_message "Cloning repository..."
-git clone https://github.com/your-repo/network-monitoring.git .
+if [ -d ".git" ]; then
+    print_warning "Repository already exists. Pulling latest changes..."
+    git pull
+else
+    git clone https://github.com/bsnwgit/network-monitoring.git .
+fi
+check_command "Repository setup"
 
 # Create and activate Python virtual environment
 print_message "Setting up Python virtual environment..."
-python3 -m venv venv
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+fi
 source venv/bin/activate
+check_command "Python virtual environment setup"
 
 # Install Python dependencies
 print_message "Installing Python dependencies..."
-pip install -r backend/requirements.txt
+if [ -f "backend/requirements.txt" ]; then
+    pip install -r backend/requirements.txt
+else
+    print_error "requirements.txt not found"
+    exit 1
+fi
+check_command "Python dependencies installation"
 
 # Install Node.js dependencies
 print_message "Installing Node.js dependencies..."
-cd frontend
-npm install
-cd ..
+if [ -d "frontend" ]; then
+    cd frontend
+    npm install
+    cd ..
+else
+    print_error "frontend directory not found"
+    exit 1
+fi
+check_command "Node.js dependencies installation"
 
 # Configure PostgreSQL
 print_message "Configuring PostgreSQL..."
-sudo -u postgres psql -c "CREATE DATABASE network_monitoring;"
-sudo -u postgres psql -c "CREATE USER network_monitoring WITH PASSWORD 'your_secure_password';"
+sudo -u postgres psql -c "CREATE DATABASE network_monitoring;" || print_warning "Database might already exist"
+sudo -u postgres psql -c "CREATE USER network_monitoring WITH PASSWORD 'your_secure_password';" || print_warning "User might already exist"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE network_monitoring TO network_monitoring;"
+check_command "PostgreSQL configuration"
 
 # Create configuration files
 print_message "Creating configuration files..."
