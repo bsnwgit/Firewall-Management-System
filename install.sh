@@ -84,7 +84,7 @@ check_command "System update"
 
 # Install required system packages
 print_message "Installing system dependencies..."
-apt install -y python3 python3-pip python3-full git build-essential libssl-dev libffi-dev python3-dev curl wget unzip make gcc g++ snmp snmpd tcpdump net-tools iproute2 iptables nginx redis-server postgresql postgresql-contrib libpq-dev libsnmp-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype-dev libblas-dev liblapack-dev libatlas-base-dev gfortran python3-pysnmp4 python3-psycopg2 python3-redis python3-flask python3-flask-sqlalchemy python3-flask-migrate python3-flask-cors python3-jwt python3-cryptography python3-pandas python3-numpy python3-matplotlib python3-seaborn python3-scipy python3-requests python3-paramiko python3-netaddr python3-yaml python3-jinja2 python3-markupsafe python3-werkzeug python3-click python3-itsdangerous python3-six python3-dateutil python3-urllib3 python3-chardet python3-certifi python3-idna python3-requests-oauthlib python3-oauthlib python3-bcrypt python3-cffi python3-pycparser python3-asn1crypto python3-cryptography python3-future python3-pytz python3-configparser python3-pathlib2 python3-scandir logrotate rsyslog htop iotop iftop nethogs ufw fail2ban rsync ntp sysstat supervisor
+apt install -y python3 python3-pip python3-full git build-essential libssl-dev libffi-dev python3-dev curl wget unzip make gcc g++ snmp snmpd tcpdump net-tools iproute2 iptables nginx redis-server postgresql postgresql-contrib libpq-dev libsnmp-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype-dev libblas-dev liblapack-dev libatlas-base-dev gfortran python3-pysnmp4 python3-psycopg2 python3-redis python3-flask python3-flask-sqlalchemy python3-flask-migrate python3-flask-cors python3-jwt python3-cryptography python3-pandas python3-numpy python3-matplotlib python3-seaborn python3-scipy python3-requests python3-paramiko python3-netaddr python3-yaml python3-jinja2 python3-markupsafe python3-werkzeug python3-click python3-itsdangerous python3-six python3-dateutil python3-urllib3 python3-chardet python3-certifi python3-idna python3-requests-oauthlib python3-oauthlib python3-bcrypt python3-cffi python3-pycparser python3-asn1crypto python3-cryptography python3-future logrotate rsyslog htop iotop iftop nethogs ufw fail2ban rsync ntp sysstat supervisor
 check_command "System dependencies installation"
 
 # Verify critical packages
@@ -102,15 +102,10 @@ apt install -y pipx
 pipx ensurepath
 check_command "pipx installation"
 
-# Install additional Python packages using pipx
+# Install additional Python packages using pip
 print_message "Installing additional Python packages..."
-for package in pytz ipaddress enum34 typing configparser pathlib2 scandir; do
-    if ! pipx list | grep -q $package; then
-        pipx install $package || print_warning "Failed to install $package with pipx"
-    else
-        print_message "$package already installed with pipx"
-    fi
-done
+pip3 install --no-cache-dir pytz configparser pathlib2 scandir
+check_command "Additional Python packages installation"
 
 # Install Node.js and npm from NodeSource
 print_message "Installing Node.js and npm..."
@@ -152,8 +147,8 @@ if [ -f "backend/requirements.txt" ]; then
     while IFS= read -r line; do
         package=$(echo "$line" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1)
         if ! apt install -y "python3-${package}" 2>/dev/null; then
-            print_warning "Package python3-${package} not found in repositories, trying pipx..."
-            pipx install $package || print_warning "Failed to install $package"
+            print_warning "Package python3-${package} not found in repositories, trying pip..."
+            pip3 install --no-cache-dir $package || print_warning "Failed to install $package"
         fi
     done < backend/requirements.txt
 else
