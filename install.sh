@@ -212,45 +212,195 @@ check_command "Python dependencies installation"
 print_message "Installing Node.js dependencies..."
 if [ -d "frontend" ]; then
     cd frontend
-    if [ ! -d "src/components" ]; then
-        mkdir -p src/components/Error src/components/Loading src/components/Notification src/components/Common src/components/Forms src/components/Charts src/components/Layout src/components/Table src/components/Cards
+    if [ ! -d "src" ]; then
+        mkdir -p src
     fi
 
-    # Create missing directories
-    if [ ! -d "src/pages" ]; then
-        mkdir -p src/pages/Dashboard src/pages/Devices src/pages/Security src/pages/Settings src/pages/Auth src/pages/Reports src/pages/Alerts
+    # Create index.js if it doesn't exist
+    if [ ! -f "src/index.js" ]; then
+        print_warning "index.js not found, creating default..."
+        cat > src/index.js << EOL
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import theme from './theme/theme';
+import App from './App';
+import './index.css';
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <BrowserRouter>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <App />
+        </ThemeProvider>
+      </BrowserRouter>
+    </Provider>
+  </React.StrictMode>
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+EOL
     fi
 
-    if [ ! -d "src/assets" ]; then
-        mkdir -p src/assets/images src/assets/icons src/assets/styles src/assets/fonts src/assets/data
+    # Create store.js if it doesn't exist
+    if [ ! -f "src/store.js" ]; then
+        print_warning "store.js not found, creating default..."
+        cat > src/store.js << EOL
+import { configureStore } from '@reduxjs/toolkit';
+import deviceReducer from './features/device/deviceSlice';
+import authReducer from './features/auth/authSlice';
+import alertReducer from './features/alert/alertSlice';
+
+export const store = configureStore({
+  reducer: {
+    device: deviceReducer,
+    auth: authReducer,
+    alert: alertReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
+});
+EOL
     fi
 
-    if [ ! -d "src/services" ]; then
-        mkdir -p src/services/api src/services/snmp src/services/websocket src/services/auth src/services/notifications
+    # Create features directory and slices if they don't exist
+    if [ ! -d "src/features" ]; then
+        mkdir -p src/features/device src/features/auth src/features/alert
     fi
 
-    if [ ! -d "src/hooks" ]; then
-        mkdir -p src/hooks
+    if [ ! -f "src/features/device/deviceSlice.js" ]; then
+        print_warning "deviceSlice.js not found, creating default..."
+        cat > src/features/device/deviceSlice.js << EOL
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+  devices: [],
+  selectedDevice: null,
+  loading: false,
+  error: null,
+};
+
+const deviceSlice = createSlice({
+  name: 'device',
+  initialState,
+  reducers: {
+    setDevices: (state, action) => {
+      state.devices = action.payload;
+    },
+    setSelectedDevice: (state, action) => {
+      state.selectedDevice = action.payload;
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+  },
+});
+
+export const { setDevices, setSelectedDevice, setLoading, setError } = deviceSlice.actions;
+export default deviceSlice.reducer;
+EOL
     fi
 
-    if [ ! -d "src/context" ]; then
-        mkdir -p src/context
+    if [ ! -f "src/features/auth/authSlice.js" ]; then
+        print_warning "authSlice.js not found, creating default..."
+        cat > src/features/auth/authSlice.js << EOL
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+  user: null,
+  token: localStorage.getItem('token'),
+  isAuthenticated: !!localStorage.getItem('token'),
+  loading: false,
+  error: null,
+};
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    setUser: (state, action) => {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+    },
+    setToken: (state, action) => {
+      state.token = action.payload;
+      localStorage.setItem('token', action.payload);
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+    logout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
+      localStorage.removeItem('token');
+    },
+  },
+});
+
+export const { setUser, setToken, setLoading, setError, logout } = authSlice.actions;
+export default authSlice.reducer;
+EOL
     fi
 
-    if [ ! -d "src/locales" ]; then
-        mkdir -p src/locales/en src/locales/es
-    fi
+    if [ ! -f "src/features/alert/alertSlice.js" ]; then
+        print_warning "alertSlice.js not found, creating default..."
+        cat > src/features/alert/alertSlice.js << EOL
+import { createSlice } from '@reduxjs/toolkit';
 
-    if [ ! -d "src/layouts" ]; then
-        mkdir -p src/layouts
-    fi
+const initialState = {
+  alerts: [],
+  loading: false,
+  error: null,
+};
 
-    if [ ! -d "src/theme" ]; then
-        mkdir -p src/theme
-    fi
+const alertSlice = createSlice({
+  name: 'alert',
+  initialState,
+  reducers: {
+    setAlerts: (state, action) => {
+      state.alerts = action.payload;
+    },
+    addAlert: (state, action) => {
+      state.alerts.push(action.payload);
+    },
+    updateAlert: (state, action) => {
+      const index = state.alerts.findIndex(alert => alert.id === action.payload.id);
+      if (index !== -1) {
+        state.alerts[index] = action.payload;
+      }
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+  },
+});
 
-    if [ ! -d "src/utils" ]; then
-        mkdir -p src/utils
+export const { setAlerts, addAlert, updateAlert, setLoading, setError } = alertSlice.actions;
+export default alertSlice.reducer;
+EOL
     fi
 
     # Create missing utility files
