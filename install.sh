@@ -89,8 +89,8 @@ check_command "System dependencies installation"
 
 # Install Cython separately
 print_message "Installing Cython..."
-pip3 install --upgrade pip setuptools wheel
-pip3 install cython
+pip3 install --upgrade pip setuptools wheel --break-system-packages
+pip3 install cython --break-system-packages
 check_command "Cython installation"
 
 # Verify critical packages
@@ -919,7 +919,7 @@ cd backend
 python3 -m venv ../venv
 source ../venv/bin/activate
 
-# Install Cython and other build dependencies in the virtual environment
+# Install build dependencies in the virtual environment
 print_message "Installing build dependencies..."
 pip install --upgrade pip setuptools wheel
 pip install cython
