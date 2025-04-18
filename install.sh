@@ -282,7 +282,7 @@ EOL
     # Create reportWebVitals.js if it doesn't exist
     if [ ! -f "src/reportWebVitals.js" ]; then
         print_warning "reportWebVitals.js not found, creating default..."
-        cat > src/reportWebVitals.js << EOL
+        cat > src/reportWebVitals.js << 'EOL'
 const reportWebVitals = (onPerfEntry) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
     import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
@@ -297,6 +297,7 @@ const reportWebVitals = (onPerfEntry) => {
 
 export default reportWebVitals;
 EOL
+    fi
 
     # Create index.css if it doesn't exist
     if [ ! -f "src/index.css" ]; then
