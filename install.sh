@@ -166,52 +166,26 @@ else
 fi
 check_command "Repository setup"
 
-# Install Python dependencies
-print_message "Installing Python dependencies..."
-if [ -f "backend/requirements.txt" ]; then
-    # Convert requirements.txt to apt packages
-    while IFS= read -r line; do
-        package=$(echo "$line" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1)
-        if ! apt install -y "python3-${package}" 2>/dev/null; then
-            print_warning "Package python3-${package} not found in repositories, trying pip..."
-            pip3 install --break-system-packages $package || print_warning "Failed to install $package"
-        fi
-    done < backend/requirements.txt
-else
-    print_warning "requirements.txt not found, creating default requirements..."
-    mkdir -p backend
-    cat > backend/requirements.txt << EOL
-flask==2.0.1
-flask-sqlalchemy==2.5.1
-flask-migrate==3.1.0
-flask-cors==3.0.10
-flask-jwt-extended==4.3.1
-psycopg2-binary==2.9.3
-redis==4.3.4
-pysnmp==4.4.12
-paramiko==2.11.0
-netaddr==0.8.0
-pyyaml==6.0
-pandas==1.4.2
-numpy==1.22.3
-matplotlib==3.5.1
-seaborn==0.11.2
-scipy==1.8.0
-requests==2.27.1
-cryptography==36.0.1
-bcrypt==3.2.0
-EOL
-    
-    # Install default requirements
-    while IFS= read -r line; do
-        package=$(echo "$line" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1)
-        if ! apt install -y "python3-${package}" 2>/dev/null; then
-            print_warning "Package python3-${package} not found in repositories, trying pip..."
-            pip3 install --break-system-packages $package || print_warning "Failed to install $package"
-        fi
-    done < backend/requirements.txt
-fi
-check_command "Python dependencies installation"
+# Install build dependencies
+print_message "Installing build dependencies..."
+apt install -y python3-dev python3-pip python3-setuptools python3-wheel build-essential libssl-dev libffi-dev
+check_command "Build dependencies installation"
+
+# Create and activate Python virtual environment
+print_message "Creating Python virtual environment..."
+cd backend
+python3 -m venv ../venv
+source ../venv/bin/activate
+
+# Install specific versions of build tools
+print_message "Installing build tools..."
+pip install --no-cache-dir "setuptools==68.2.2" "wheel==0.41.2" "pip==23.3.1"
+pip install --no-cache-dir "cython==3.0.2"
+
+# Install project dependencies
+print_message "Installing project dependencies..."
+pip install --no-cache-dir -r requirements.txt
+cd ..
 
 # Install Node.js dependencies
 print_message "Installing Node.js dependencies..."
@@ -910,17 +884,6 @@ chmod -R 755 /opt/network-monitoring
 print_message "Building frontend..."
 cd frontend
 npm run build
-cd ..
-
-# Create and activate Python virtual environment
-print_message "Creating Python virtual environment..."
-cd backend
-python3 -m venv ../venv
-source ../venv/bin/activate
-
-# Install project dependencies in the virtual environment
-print_message "Installing project dependencies..."
-pip install -r requirements.txt
 cd ..
 
 # Enable and start services
