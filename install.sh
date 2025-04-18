@@ -130,6 +130,11 @@ mkdir -p /opt/network-monitoring
 cd /opt/network-monitoring
 check_command "Project directory creation"
 
+# Configure git safe directory
+print_message "Configuring git safe directory..."
+git config --global --add safe.directory /opt/network-monitoring
+check_command "Git safe directory configuration"
+
 # Clone repository
 print_message "Cloning repository..."
 if [ -d ".git" ]; then
