@@ -598,7 +598,19 @@ REACT_APP_SNMP_COMMUNITY=public
 REACT_APP_SNMP_VERSION=2c
 EOL
 
-# Nginx configuration
+# Configure Nginx
+print_message "Configuring Nginx..."
+if [ -f "/etc/nginx/sites-enabled/network-monitoring" ]; then
+    print_warning "Nginx configuration already exists, removing old configuration..."
+    rm -f /etc/nginx/sites-enabled/network-monitoring
+fi
+
+if [ -f "/etc/nginx/sites-available/network-monitoring" ]; then
+    print_warning "Nginx configuration file already exists, backing up..."
+    mv /etc/nginx/sites-available/network-monitoring /etc/nginx/sites-available/network-monitoring.bak
+fi
+
+# Create Nginx configuration
 cat > /etc/nginx/sites-available/network-monitoring << EOL
 server {
     listen 80;
@@ -624,11 +636,18 @@ server {
 }
 EOL
 
-# Enable Nginx site
-print_message "Configuring Nginx..."
-ln -s /etc/nginx/sites-available/network-monitoring /etc/nginx/sites-enabled/
+# Create symbolic link
+ln -sf /etc/nginx/sites-available/network-monitoring /etc/nginx/sites-enabled/
+
+# Test Nginx configuration
+print_message "Testing Nginx configuration..."
 nginx -t
+check_command "Nginx configuration test"
+
+# Restart Nginx
+print_message "Restarting Nginx..."
 systemctl restart nginx
+check_command "Nginx restart"
 
 # Create systemd service files
 print_message "Creating systemd service files..."
