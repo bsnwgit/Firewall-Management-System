@@ -422,6 +422,12 @@ EOL
 
     npm install --no-audit --no-fund
     cd ..
+
+    # Install additional required dependencies
+    print_message "Installing additional required dependencies..."
+    cd frontend
+    npm install react-redux@8.1.2 @reduxjs/toolkit@1.9.5 --save
+    cd ..
 else
     print_warning "frontend directory not found, creating it..."
     mkdir -p frontend
