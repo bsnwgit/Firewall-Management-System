@@ -216,33 +216,59 @@ if [ -d "frontend" ]; then
         mkdir -p src
     fi
 
+    # Create App.js if it doesn't exist
+    if [ ! -f "src/App.js" ]; then
+        print_warning "App.js not found, creating default..."
+        cat > src/App.js << EOL
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import './App.css';
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#90caf9',
+    },
+    secondary: {
+      main: '#f48fb1',
+    },
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          <Route path="/" element={<div>Welcome to Network Monitoring</div>} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
+  );
+}
+
+export default App;
+EOL
+    fi
+
     # Create index.js if it doesn't exist
     if [ ! -f "src/index.js" ]; then
         print_warning "index.js not found, creating default..."
         cat > src/index.js << EOL
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { Provider } from 'react-redux';
-import { store } from './store';
-import theme from './theme/theme';
-import App from './App';
 import './index.css';
+import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Provider store={store}>
-      <BrowserRouter>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <App />
-        </ThemeProvider>
-      </BrowserRouter>
-    </Provider>
+    <App />
   </React.StrictMode>
 );
 
@@ -253,543 +279,26 @@ reportWebVitals();
 EOL
     fi
 
-    # Create store.js if it doesn't exist
-    if [ ! -f "src/store.js" ]; then
-        print_warning "store.js not found, creating default..."
-        cat > src/store.js << EOL
-import { configureStore } from '@reduxjs/toolkit';
-import deviceReducer from './features/device/deviceSlice';
-import authReducer from './features/auth/authSlice';
-import alertReducer from './features/alert/alertSlice';
-
-export const store = configureStore({
-  reducer: {
-    device: deviceReducer,
-    auth: authReducer,
-    alert: alertReducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false,
-    }),
-});
-EOL
-    fi
-
-    # Create features directory and slices if they don't exist
-    if [ ! -d "src/features" ]; then
-        mkdir -p src/features/device src/features/auth src/features/alert
-    fi
-
-    if [ ! -f "src/features/device/deviceSlice.js" ]; then
-        print_warning "deviceSlice.js not found, creating default..."
-        cat > src/features/device/deviceSlice.js << EOL
-import { createSlice } from '@reduxjs/toolkit';
-
-const initialState = {
-  devices: [],
-  selectedDevice: null,
-  loading: false,
-  error: null,
-};
-
-const deviceSlice = createSlice({
-  name: 'device',
-  initialState,
-  reducers: {
-    setDevices: (state, action) => {
-      state.devices = action.payload;
-    },
-    setSelectedDevice: (state, action) => {
-      state.selectedDevice = action.payload;
-    },
-    setLoading: (state, action) => {
-      state.loading = action.payload;
-    },
-    setError: (state, action) => {
-      state.error = action.payload;
-    },
-  },
-});
-
-export const { setDevices, setSelectedDevice, setLoading, setError } = deviceSlice.actions;
-export default deviceSlice.reducer;
-EOL
-    fi
-
-    if [ ! -f "src/features/auth/authSlice.js" ]; then
-        print_warning "authSlice.js not found, creating default..."
-        cat > src/features/auth/authSlice.js << EOL
-import { createSlice } from '@reduxjs/toolkit';
-
-const initialState = {
-  user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
-  loading: false,
-  error: null,
-};
-
-const authSlice = createSlice({
-  name: 'auth',
-  initialState,
-  reducers: {
-    setUser: (state, action) => {
-      state.user = action.payload;
-      state.isAuthenticated = true;
-    },
-    setToken: (state, action) => {
-      state.token = action.payload;
-      localStorage.setItem('token', action.payload);
-    },
-    setLoading: (state, action) => {
-      state.loading = action.payload;
-    },
-    setError: (state, action) => {
-      state.error = action.payload;
-    },
-    logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.isAuthenticated = false;
-      localStorage.removeItem('token');
-    },
-  },
-});
-
-export const { setUser, setToken, setLoading, setError, logout } = authSlice.actions;
-export default authSlice.reducer;
-EOL
-    fi
-
-    if [ ! -f "src/features/alert/alertSlice.js" ]; then
-        print_warning "alertSlice.js not found, creating default..."
-        cat > src/features/alert/alertSlice.js << EOL
-import { createSlice } from '@reduxjs/toolkit';
-
-const initialState = {
-  alerts: [],
-  loading: false,
-  error: null,
-};
-
-const alertSlice = createSlice({
-  name: 'alert',
-  initialState,
-  reducers: {
-    setAlerts: (state, action) => {
-      state.alerts = action.payload;
-    },
-    addAlert: (state, action) => {
-      state.alerts.push(action.payload);
-    },
-    updateAlert: (state, action) => {
-      const index = state.alerts.findIndex(alert => alert.id === action.payload.id);
-      if (index !== -1) {
-        state.alerts[index] = action.payload;
-      }
-    },
-    setLoading: (state, action) => {
-      state.loading = action.payload;
-    },
-    setError: (state, action) => {
-      state.error = action.payload;
-    },
-  },
-});
-
-export const { setAlerts, addAlert, updateAlert, setLoading, setError } = alertSlice.actions;
-export default alertSlice.reducer;
-EOL
-    fi
-
-    # Create missing utility files
-    if [ ! -f "src/utils/format.js" ]; then
-        print_warning "format.js not found, creating default..."
-        cat > src/utils/format.js << EOL
-import { format } from 'date-fns';
-
-export const formatDate = (date, pattern = 'yyyy-MM-dd HH:mm:ss') => {
-  return format(new Date(date), pattern);
-};
-
-export const formatBytes = (bytes, decimals = 2) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return \`\${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} \${sizes[i]}\`;
-};
-
-export const formatNumber = (number, decimals = 2) => {
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(number);
-};
-
-export const formatPercentage = (value, decimals = 2) => {
-  return \`\${formatNumber(value * 100, decimals)}%\`;
-};
-EOL
-    fi
-
-    if [ ! -f "src/utils/validation.js" ]; then
-        print_warning "validation.js not found, creating default..."
-        cat > src/utils/validation.js << EOL
-import * as Yup from 'yup';
-
-export const ipAddressSchema = Yup.string()
-  .matches(
-    /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-    'Invalid IP address'
-  )
-  .required('IP address is required');
-
-export const macAddressSchema = Yup.string()
-  .matches(
-    /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/,
-    'Invalid MAC address'
-  )
-  .required('MAC address is required');
-
-export const portSchema = Yup.number()
-  .min(1, 'Port must be between 1 and 65535')
-  .max(65535, 'Port must be between 1 and 65535')
-  .required('Port is required');
-
-export const snmpCommunitySchema = Yup.string()
-  .min(1, 'Community string is required')
-  .max(32, 'Community string is too long')
-  .required('Community string is required');
-EOL
-    fi
-
-    if [ ! -f "src/utils/constants.js" ]; then
-        print_warning "constants.js not found, creating default..."
-        cat > src/utils/constants.js << EOL
-export const API_ENDPOINTS = {
-  AUTH: {
-    LOGIN: '/auth/login',
-    LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh',
-    ME: '/auth/me',
-  },
-  DEVICES: {
-    LIST: '/devices',
-    DETAIL: (id) => \`/devices/\${id}\`,
-    STATS: (id) => \`/devices/\${id}/stats\`,
-    CONFIG: (id) => \`/devices/\${id}/config\`,
-  },
-  ALERTS: {
-    LIST: '/alerts',
-    DETAIL: (id) => \`/alerts/\${id}\`,
-    ACKNOWLEDGE: (id) => \`/alerts/\${id}/acknowledge\`,
-  },
-  REPORTS: {
-    GENERATE: '/reports/generate',
-    DOWNLOAD: (id) => \`/reports/\${id}/download\`,
-  },
-};
-
-export const SNMP_VERSIONS = {
-  V1: '1',
-  V2C: '2c',
-  V3: '3',
-};
-
-export const ALERT_SEVERITIES = {
-  INFO: 'info',
-  WARNING: 'warning',
-  ERROR: 'error',
-  CRITICAL: 'critical',
-};
-
-export const CHART_TYPES = {
-  LINE: 'line',
-  BAR: 'bar',
-  PIE: 'pie',
-  DOUGHNUT: 'doughnut',
-};
-
-export const DATE_FORMATS = {
-  DEFAULT: 'yyyy-MM-dd HH:mm:ss',
-  SHORT: 'MM/dd/yyyy',
-  LONG: 'MMMM dd, yyyy',
-  TIME: 'HH:mm:ss',
-};
-EOL
-    fi
-
-    # Create missing service files
-    if [ ! -f "src/services/api/deviceService.js" ]; then
-        print_warning "deviceService.js not found, creating default..."
-        cat > src/services/api/deviceService.js << EOL
-import api from '../../utils/api';
-import { API_ENDPOINTS } from '../../utils/constants';
-
-export const getDevices = async () => {
-  const response = await api.get(API_ENDPOINTS.DEVICES.LIST);
-  return response.data;
-};
-
-export const getDevice = async (id) => {
-  const response = await api.get(API_ENDPOINTS.DEVICES.DETAIL(id));
-  return response.data;
-};
-
-export const getDeviceStats = async (id) => {
-  const response = await api.get(API_ENDPOINTS.DEVICES.STATS(id));
-  return response.data;
-};
-
-export const updateDeviceConfig = async (id, config) => {
-  const response = await api.put(API_ENDPOINTS.DEVICES.CONFIG(id), config);
-  return response.data;
-};
-EOL
-    fi
-
-    if [ ! -f "src/services/snmp/snmpService.js" ]; then
-        print_warning "snmpService.js not found, creating default..."
-        cat > src/services/snmp/snmpService.js << EOL
-import config from '../../config';
-
-export const getSnmpConfig = () => {
-  return {
-    community: config.snmp.community,
-    version: config.snmp.version,
-    timeout: config.snmp.timeout,
-    retries: config.snmp.retries,
-  };
-};
-
-export const getDeviceInfo = async (ip, oids) => {
-  try {
-    const response = await fetch(\`\${config.api.baseUrl}/snmp/get\`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ip,
-        oids,
-        ...getSnmpConfig(),
-      }),
+    # Create reportWebVitals.js if it doesn't exist
+    if [ ! -f "src/reportWebVitals.js" ]; then
+        print_warning "reportWebVitals.js not found, creating default..."
+        cat > src/reportWebVitals.js << EOL
+const reportWebVitals = (onPerfEntry) => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
     });
-    return await response.json();
-  } catch (error) {
-    console.error('SNMP request failed:', error);
-    throw error;
   }
 };
 
-export const setDeviceConfig = async (ip, oid, value) => {
-  try {
-    const response = await fetch(\`\${config.api.baseUrl}/snmp/set\`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ip,
-        oid,
-        value,
-        ...getSnmpConfig(),
-      }),
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('SNMP set request failed:', error);
-    throw error;
-  }
-};
+export default reportWebVitals;
 EOL
-    fi
 
-    # Create missing hook files
-    if [ ! -f "src/hooks/useDevices.js" ]; then
-        print_warning "useDevices.js not found, creating default..."
-        cat > src/hooks/useDevices.js << EOL
-import { useState, useEffect } from 'react';
-import { getDevices, getDeviceStats } from '../services/api/deviceService';
-
-export const useDevices = () => {
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchDevices = async () => {
-      try {
-        const data = await getDevices();
-        setDevices(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDevices();
-  }, []);
-
-  const refreshDeviceStats = async (deviceId) => {
-    try {
-      const stats = await getDeviceStats(deviceId);
-      setDevices(prevDevices =>
-        prevDevices.map(device =>
-          device.id === deviceId ? { ...device, stats } : device
-        )
-      );
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  return { devices, loading, error, refreshDeviceStats };
-};
-EOL
-    fi
-
-    if [ ! -f "src/hooks/useWebSocket.js" ]; then
-        print_warning "useWebSocket.js not found, creating default..."
-        cat > src/hooks/useWebSocket.js << EOL
-import { useEffect, useRef, useCallback } from 'react';
-import config from '../config';
-
-export const useWebSocket = (onMessage) => {
-  const ws = useRef(null);
-
-  const connect = useCallback(() => {
-    ws.current = new WebSocket(config.websocket.url);
-
-    ws.current.onopen = () => {
-      console.log('WebSocket connected');
-    };
-
-    ws.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      onMessage(data);
-    };
-
-    ws.current.onclose = () => {
-      console.log('WebSocket disconnected');
-      setTimeout(connect, config.websocket.reconnectInterval);
-    };
-
-    ws.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-  }, [onMessage]);
-
-  useEffect(() => {
-    connect();
-    return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
-    };
-  }, [connect]);
-
-  const sendMessage = useCallback((message) => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify(message));
-    }
-  }, []);
-
-  return { sendMessage };
-};
-EOL
-    fi
-
-    # Create missing context files
-    if [ ! -f "src/context/DeviceContext.js" ]; then
-        print_warning "DeviceContext.js not found, creating default..."
-        cat > src/context/DeviceContext.js << EOL
-import React, { createContext, useContext, useState } from 'react';
-import { useDevices } from '../hooks/useDevices';
-
-const DeviceContext = createContext();
-
-export const DeviceProvider = ({ children }) => {
-  const { devices, loading, error, refreshDeviceStats } = useDevices();
-  const [selectedDevice, setSelectedDevice] = useState(null);
-
-  const value = {
-    devices,
-    loading,
-    error,
-    selectedDevice,
-    setSelectedDevice,
-    refreshDeviceStats,
-  };
-
-  return (
-    <DeviceContext.Provider value={value}>
-      {children}
-    </DeviceContext.Provider>
-  );
-};
-
-export const useDeviceContext = () => {
-  const context = useContext(DeviceContext);
-  if (!context) {
-    throw new Error('useDeviceContext must be used within a DeviceProvider');
-  }
-  return context;
-};
-EOL
-    fi
-
-    # Create missing configuration files
-    if [ ! -f "src/config.js" ]; then
-        print_warning "config.js not found, creating default..."
-        cat > src/config.js << EOL
-export default {
-  api: {
-    baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000',
-    timeout: 10000,
-    retryAttempts: 3,
-  },
-  websocket: {
-    url: process.env.REACT_APP_WS_URL || 'ws://localhost:8000',
-    reconnectInterval: 5000,
-    maxReconnectAttempts: 5,
-  },
-  snmp: {
-    community: process.env.REACT_APP_SNMP_COMMUNITY || 'public',
-    version: process.env.REACT_APP_SNMP_VERSION || '2c',
-    timeout: 5000,
-    retries: 3,
-  },
-  auth: {
-    tokenKey: 'auth_token',
-    refreshTokenKey: 'refresh_token',
-    tokenExpiration: 3600,
-  },
-  pagination: {
-    defaultPageSize: 10,
-    pageSizeOptions: [10, 25, 50, 100],
-  },
-  charts: {
-    defaultColors: [
-      '#90caf9',
-      '#f48fb1',
-      '#66bb6a',
-      '#ffa726',
-      '#29b6f6',
-      '#ab47bc',
-      '#ec407a',
-      '#7e57c2',
-    ],
-  },
-};
-EOL
-    fi
-
-    # Create missing style files
+    # Create index.css if it doesn't exist
     if [ ! -f "src/index.css" ]; then
         print_warning "index.css not found, creating default..."
         cat > src/index.css << EOL
@@ -816,28 +325,10 @@ code {
   display: flex;
   flex-direction: column;
 }
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1e1e1e;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #424242;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #616161;
-}
 EOL
     fi
 
+    # Create App.css if it doesn't exist
     if [ ! -f "src/App.css" ]; then
         print_warning "App.css not found, creating default..."
         cat > src/App.css << EOL
@@ -850,189 +341,8 @@ EOL
 .main-content {
   flex: 1;
   padding: 20px;
-  margin-top: 64px;
-  margin-left: 240px;
 }
-
-@media (max-width: 600px) {
-  .main-content {
-    margin-left: 0;
-  }
-}
-
-/* Common utility classes */
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.full-height {
-  height: 100%;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.mt-1 { margin-top: 8px; }
-.mt-2 { margin-top: 16px; }
-.mt-3 { margin-top: 24px; }
-.mt-4 { margin-top: 32px; }
-
-.mb-1 { margin-bottom: 8px; }
-.mb-2 { margin-bottom: 16px; }
-.mb-3 { margin-bottom: 24px; }
-.mb-4 { margin-bottom: 32px; }
-
-.ml-1 { margin-left: 8px; }
-.ml-2 { margin-left: 16px; }
-.ml-3 { margin-left: 24px; }
-.ml-4 { margin-left: 32px; }
-
-.mr-1 { margin-right: 8px; }
-.mr-2 { margin-right: 16px; }
-.mr-3 { margin-right: 24px; }
-.mr-4 { margin-right: 32px; }
-
-.p-1 { padding: 8px; }
-.p-2 { padding: 16px; }
-.p-3 { padding: 24px; }
-.p-4 { padding: 32px; }
 EOL
-    fi
-
-    # Create missing test files
-    if [ ! -f "src/setupTests.js" ]; then
-        print_warning "setupTests.js not found, creating default..."
-        cat > src/setupTests.js << EOL
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
-// expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom';
-
-// Mock matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
-
-// Mock ResizeObserver
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
-EOL
-    fi
-
-    # Create missing service worker
-    if [ ! -f "src/serviceWorker.js" ]; then
-        print_warning "serviceWorker.js not found, creating default..."
-        cat > src/serviceWorker.js << EOL
-// This service worker file is effectively a 'no-op' that will reset any
-// previous service worker registered for the same host:port combination.
-// In the production build, this file is replaced with an actual service worker
-// file that will precache your site's local assets.
-
-const CACHE_NAME = 'network-monitoring-cache-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/static/js/main.chunk.js',
-  '/static/css/main.chunk.css',
-  '/manifest.json',
-  '/favicon.ico',
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => response || fetch(event.request))
-  );
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-});
-EOL
-    fi
-
-    # Create missing test files
-    if [ ! -f "src/App.test.js" ]; then
-        print_warning "App.test.js not found, creating default..."
-        cat > src/App.test.js << EOL
-import { render, screen } from '@testing-library/react';
-import App from './App';
-
-test('renders welcome message', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/Welcome to Network Monitoring/i);
-  expect(linkElement).toBeInTheDocument();
-});
-EOL
-    fi
-
-    # Create missing public assets
-    if [ ! -f "public/favicon.ico" ]; then
-        print_warning "favicon.ico not found, creating default..."
-        touch public/favicon.ico
-    fi
-
-    if [ ! -f "public/logo192.png" ]; then
-        print_warning "logo192.png not found, creating default..."
-        touch public/logo192.png
-    fi
-
-    if [ ! -f "public/logo512.png" ]; then
-        print_warning "logo512.png not found, creating default..."
-        touch public/logo512.png
     fi
 
     npm install --no-audit --no-fund
@@ -1091,7 +401,42 @@ else
 }
 EOL
 
-    mkdir -p src/components src/pages src/utils src/assets src/services src/hooks src/context
+    mkdir -p src
+    cat > src/App.js << EOL
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import './App.css';
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#90caf9',
+    },
+    secondary: {
+      main: '#f48fb1',
+    },
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          <Route path="/" element={<div>Welcome to Network Monitoring</div>} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
+  );
+}
+
+export default App;
+EOL
+
     cat > src/index.js << EOL
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -1128,39 +473,43 @@ const reportWebVitals = (onPerfEntry) => {
 export default reportWebVitals;
 EOL
 
-    cat > src/App.js << EOL
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import './App.css';
-
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#90caf9',
-    },
-    secondary: {
-      main: '#f48fb1',
-    },
-  },
-});
-
-function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <Routes>
-          <Route path="/" element={<div>Welcome to Network Monitoring</div>} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
-  );
+    cat > src/index.css << EOL
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-export default App;
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+EOL
+
+    cat > src/App.css << EOL
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+}
 EOL
 
     mkdir -p public
