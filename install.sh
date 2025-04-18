@@ -918,8 +918,15 @@ print_message "Creating Python virtual environment..."
 cd backend
 python3 -m venv ../venv
 source ../venv/bin/activate
+
+# Install Cython and other build dependencies in the virtual environment
+print_message "Installing build dependencies..."
 pip install --upgrade pip setuptools wheel
-pip install --no-cache-dir -r requirements.txt
+pip install cython
+
+# Install project dependencies
+print_message "Installing project dependencies..."
+pip install -r requirements.txt
 cd ..
 
 # Enable and start services
