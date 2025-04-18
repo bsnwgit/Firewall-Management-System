@@ -213,686 +213,676 @@ print_message "Installing Node.js dependencies..."
 if [ -d "frontend" ]; then
     cd frontend
     if [ ! -d "src/components" ]; then
-        mkdir -p src/components/Error src/components/Loading src/components/Notification
+        mkdir -p src/components/Error src/components/Loading src/components/Notification src/components/Common src/components/Forms src/components/Charts src/components/Layout src/components/Table src/components/Cards
     fi
 
-    if [ ! -f "src/components/Error/ErrorBoundary.js" ]; then
-        print_warning "ErrorBoundary component not found, creating default..."
-        cat > src/components/Error/ErrorBoundary.js << EOL
-import React from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import { Box, Typography, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-
-function ErrorFallback({ error, resetErrorBoundary }) {
-  const navigate = useNavigate();
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        p: 3,
-        textAlign: 'center',
-      }}
-    >
-      <Typography variant="h4" gutterBottom>
-        Something went wrong
-      </Typography>
-      <Typography variant="body1" color="error" paragraph>
-        {error.message}
-      </Typography>
-      <Box sx={{ mt: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={resetErrorBoundary}
-          sx={{ mr: 2 }}
-        >
-          Try again
-        </Button>
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={() => navigate('/')}
-        >
-          Go to home
-        </Button>
-      </Box>
-    </Box>
-  );
-}
-
-export default function AppErrorBoundary({ children }) {
-  return (
-    <ErrorBoundary
-      FallbackComponent={ErrorFallback}
-      onReset={() => window.location.reload()}
-    >
-      {children}
-    </ErrorBoundary>
-  );
-}
-EOL
+    # Create missing directories
+    if [ ! -d "src/pages" ]; then
+        mkdir -p src/pages/Dashboard src/pages/Devices src/pages/Security src/pages/Settings src/pages/Auth src/pages/Reports src/pages/Alerts
     fi
 
-    if [ ! -f "src/components/Loading/LoadingSpinner.js" ]; then
-        print_warning "LoadingSpinner component not found, creating default..."
-        cat > src/components/Loading/LoadingSpinner.js << EOL
-import React from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
-
-const LoadingSpinner = ({ message = 'Loading...' }) => {
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '200px',
-      }}
-    >
-      <CircularProgress size={40} />
-      <Typography variant="body1" sx={{ mt: 2 }}>
-        {message}
-      </Typography>
-    </Box>
-  );
-};
-
-export default LoadingSpinner;
-EOL
+    if [ ! -d "src/assets" ]; then
+        mkdir -p src/assets/images src/assets/icons src/assets/styles src/assets/fonts src/assets/data
     fi
 
-    if [ ! -f "src/components/Notification/ToastContainer.js" ]; then
-        print_warning "ToastContainer component not found, creating default..."
-        cat > src/components/Notification/ToastContainer.js << EOL
-import React from 'react';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-const AppToastContainer = () => {
-  return (
-    <ToastContainer
-      position="top-right"
-      autoClose={5000}
-      hideProgressBar={false}
-      newestOnTop
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="dark"
-    />
-  );
-};
-
-export default AppToastContainer;
-EOL
+    if [ ! -d "src/services" ]; then
+        mkdir -p src/services/api src/services/snmp src/services/websocket src/services/auth src/services/notifications
     fi
 
-    if [ ! -f "src/utils/notifications.js" ]; then
-        print_warning "Notifications utility not found, creating default..."
-        cat > src/utils/notifications.js << EOL
-import { toast } from 'react-toastify';
+    if [ ! -d "src/hooks" ]; then
+        mkdir -p src/hooks
+    fi
 
-export const showSuccess = (message) => {
-  toast.success(message, {
-    position: 'top-right',
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-  });
+    if [ ! -d "src/context" ]; then
+        mkdir -p src/context
+    fi
+
+    if [ ! -d "src/locales" ]; then
+        mkdir -p src/locales/en src/locales/es
+    fi
+
+    if [ ! -d "src/layouts" ]; then
+        mkdir -p src/layouts
+    fi
+
+    if [ ! -d "src/theme" ]; then
+        mkdir -p src/theme
+    fi
+
+    if [ ! -d "src/utils" ]; then
+        mkdir -p src/utils
+    fi
+
+    # Create missing utility files
+    if [ ! -f "src/utils/format.js" ]; then
+        print_warning "format.js not found, creating default..."
+        cat > src/utils/format.js << EOL
+import { format } from 'date-fns';
+
+export const formatDate = (date, pattern = 'yyyy-MM-dd HH:mm:ss') => {
+  return format(new Date(date), pattern);
 };
 
-export const showError = (message) => {
-  toast.error(message, {
-    position: 'top-right',
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-  });
+export const formatBytes = (bytes, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return \`\${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} \${sizes[i]}\`;
 };
 
-export const showWarning = (message) => {
-  toast.warning(message, {
-    position: 'top-right',
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-  });
+export const formatNumber = (number, decimals = 2) => {
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(number);
 };
 
-export const showInfo = (message) => {
-  toast.info(message, {
-    position: 'top-right',
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-  });
+export const formatPercentage = (value, decimals = 2) => {
+  return \`\${formatNumber(value * 100, decimals)}%\`;
 };
 EOL
     fi
 
-    if [ ! -f "package.json" ]; then
-        print_warning "package.json not found, creating default..."
-        cat > package.json << EOL
-{
-  "name": "network-monitoring-frontend",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "@emotion/react": "^11.10.5",
-    "@emotion/styled": "^11.10.5",
-    "@mui/icons-material": "^5.11.0",
-    "@mui/material": "^5.11.0",
-    "@mui/x-data-grid": "^5.17.0",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.2.1",
-    "chart.js": "^4.0.1",
-    "react": "^18.2.0",
-    "react-chartjs-2": "^5.0.1",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.6.1",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "react-query": "^3.39.3",
-    "react-error-boundary": "^3.1.4",
-    "react-toastify": "^9.1.3",
-    "react-helmet-async": "^1.3.0",
-    "react-i18next": "^13.2.2",
-    "i18next": "^23.4.6",
-    "i18next-browser-languagedetector": "^7.1.0",
-    "i18next-http-backend": "^2.1.1",
-    "date-fns": "^2.30.0",
-    "lodash": "^4.17.21",
-    "formik": "^2.4.2",
-    "yup": "^1.2.0"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "lint": "eslint src/**/*.{js,jsx}",
-    "format": "prettier --write src/**/*.{js,jsx,css,scss}",
-    "analyze": "source-map-explorer 'build/static/js/*.js'"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "devDependencies": {
-    "prettier": "^2.8.8",
-    "eslint-plugin-prettier": "^5.0.1",
-    "eslint-config-prettier": "^9.0.0",
-    "source-map-explorer": "^2.5.3"
-  }
-}
+    if [ ! -f "src/utils/validation.js" ]; then
+        print_warning "validation.js not found, creating default..."
+        cat > src/utils/validation.js << EOL
+import * as Yup from 'yup';
+
+export const ipAddressSchema = Yup.string()
+  .matches(
+    /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
+    'Invalid IP address'
+  )
+  .required('IP address is required');
+
+export const macAddressSchema = Yup.string()
+  .matches(
+    /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/,
+    'Invalid MAC address'
+  )
+  .required('MAC address is required');
+
+export const portSchema = Yup.number()
+  .min(1, 'Port must be between 1 and 65535')
+  .max(65535, 'Port must be between 1 and 65535')
+  .required('Port is required');
+
+export const snmpCommunitySchema = Yup.string()
+  .min(1, 'Community string is required')
+  .max(32, 'Community string is too long')
+  .required('Community string is required');
 EOL
     fi
 
-    if [ ! -d "src" ]; then
-        print_warning "src directory not found, creating default structure..."
-        mkdir -p src/components src/pages src/utils src/assets src/services src/hooks src/context src/locales src/layouts src/theme
+    if [ ! -f "src/utils/constants.js" ]; then
+        print_warning "constants.js not found, creating default..."
+        cat > src/utils/constants.js << EOL
+export const API_ENDPOINTS = {
+  AUTH: {
+    LOGIN: '/auth/login',
+    LOGOUT: '/auth/logout',
+    REFRESH: '/auth/refresh',
+    ME: '/auth/me',
+  },
+  DEVICES: {
+    LIST: '/devices',
+    DETAIL: (id) => \`/devices/\${id}\`,
+    STATS: (id) => \`/devices/\${id}/stats\`,
+    CONFIG: (id) => \`/devices/\${id}/config\`,
+  },
+  ALERTS: {
+    LIST: '/alerts',
+    DETAIL: (id) => \`/alerts/\${id}\`,
+    ACKNOWLEDGE: (id) => \`/alerts/\${id}/acknowledge\`,
+  },
+  REPORTS: {
+    GENERATE: '/reports/generate',
+    DOWNLOAD: (id) => \`/reports/\${id}/download\`,
+  },
+};
+
+export const SNMP_VERSIONS = {
+  V1: '1',
+  V2C: '2c',
+  V3: '3',
+};
+
+export const ALERT_SEVERITIES = {
+  INFO: 'info',
+  WARNING: 'warning',
+  ERROR: 'error',
+  CRITICAL: 'critical',
+};
+
+export const CHART_TYPES = {
+  LINE: 'line',
+  BAR: 'bar',
+  PIE: 'pie',
+  DOUGHNUT: 'doughnut',
+};
+
+export const DATE_FORMATS = {
+  DEFAULT: 'yyyy-MM-dd HH:mm:ss',
+  SHORT: 'MM/dd/yyyy',
+  LONG: 'MMMM dd, yyyy',
+  TIME: 'HH:mm:ss',
+};
+EOL
     fi
 
-    if [ ! -f "src/theme/theme.js" ]; then
-        print_warning "theme.js not found, creating default..."
-        cat > src/theme/theme.js << EOL
-import { createTheme } from '@mui/material/styles';
+    # Create missing service files
+    if [ ! -f "src/services/api/deviceService.js" ]; then
+        print_warning "deviceService.js not found, creating default..."
+        cat > src/services/api/deviceService.js << EOL
+import api from '../../utils/api';
+import { API_ENDPOINTS } from '../../utils/constants';
 
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#90caf9',
-      light: '#e3f2fd',
-      dark: '#42a5f5',
-    },
-    secondary: {
-      main: '#f48fb1',
-      light: '#f8bbd0',
-      dark: '#f06292',
-    },
-    error: {
-      main: '#f44336',
-      light: '#e57373',
-      dark: '#d32f2f',
-    },
-    warning: {
-      main: '#ffa726',
-      light: '#ffb74d',
-      dark: '#f57c00',
-    },
-    info: {
-      main: '#29b6f6',
-      light: '#4fc3f7',
-      dark: '#0288d1',
-    },
-    success: {
-      main: '#66bb6a',
-      light: '#81c784',
-      dark: '#388e3c',
-    },
-    background: {
-      default: '#121212',
-      paper: '#1e1e1e',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 500,
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 500,
-    },
-    h3: {
-      fontSize: '1.75rem',
-      fontWeight: 500,
-    },
-    h4: {
-      fontSize: '1.5rem',
-      fontWeight: 500,
-    },
-    h5: {
-      fontSize: '1.25rem',
-      fontWeight: 500,
-    },
-    h6: {
-      fontSize: '1rem',
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          borderRadius: 8,
-        },
+export const getDevices = async () => {
+  const response = await api.get(API_ENDPOINTS.DEVICES.LIST);
+  return response.data;
+};
+
+export const getDevice = async (id) => {
+  const response = await api.get(API_ENDPOINTS.DEVICES.DETAIL(id));
+  return response.data;
+};
+
+export const getDeviceStats = async (id) => {
+  const response = await api.get(API_ENDPOINTS.DEVICES.STATS(id));
+  return response.data;
+};
+
+export const updateDeviceConfig = async (id, config) => {
+  const response = await api.put(API_ENDPOINTS.DEVICES.CONFIG(id), config);
+  return response.data;
+};
+EOL
+    fi
+
+    if [ ! -f "src/services/snmp/snmpService.js" ]; then
+        print_warning "snmpService.js not found, creating default..."
+        cat > src/services/snmp/snmpService.js << EOL
+import config from '../../config';
+
+export const getSnmpConfig = () => {
+  return {
+    community: config.snmp.community,
+    version: config.snmp.version,
+    timeout: config.snmp.timeout,
+    retries: config.snmp.retries,
+  };
+};
+
+export const getDeviceInfo = async (ip, oids) => {
+  try {
+    const response = await fetch(\`\${config.api.baseUrl}/snmp/get\`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-        },
+      body: JSON.stringify({
+        ip,
+        oids,
+        ...getSnmpConfig(),
+      }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('SNMP request failed:', error);
+    throw error;
+  }
+};
+
+export const setDeviceConfig = async (ip, oid, value) => {
+  try {
+    const response = await fetch(\`\${config.api.baseUrl}/snmp/set\`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    },
-  },
-});
-
-export default theme;
+      body: JSON.stringify({
+        ip,
+        oid,
+        value,
+        ...getSnmpConfig(),
+      }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('SNMP set request failed:', error);
+    throw error;
+  }
+};
 EOL
     fi
 
-    if [ ! -f "src/locales/en/translation.json" ]; then
-        print_warning "English translations not found, creating default..."
-        mkdir -p src/locales/en
-        cat > src/locales/en/translation.json << EOL
-{
-  "common": {
-    "loading": "Loading...",
-    "error": "An error occurred",
-    "success": "Operation successful",
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "add": "Add",
-    "search": "Search"
-  },
-  "auth": {
-    "login": "Login",
-    "logout": "Logout",
-    "username": "Username",
-    "password": "Password",
-    "rememberMe": "Remember me",
-    "forgotPassword": "Forgot password?"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "overview": "Overview",
-    "alerts": "Alerts",
-    "performance": "Performance",
-    "devices": "Devices"
-  },
-  "settings": {
-    "title": "Settings",
-    "profile": "Profile",
-    "notifications": "Notifications",
-    "preferences": "Preferences"
-  }
-}
-EOL
-    fi
-
-    if [ ! -f "src/utils/api.js" ]; then
-        print_warning "API utility not found, creating default..."
-        cat > src/utils/api.js << EOL
-import axios from 'axios';
-import config from '../config';
-
-const api = axios.create({
-  baseURL: config.api.baseUrl,
-  timeout: config.api.timeout,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = \`Bearer \${token}\`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        const response = await api.post('/auth/refresh', { refreshToken });
-        const { token } = response.data;
-
-        localStorage.setItem('auth_token', token);
-        originalRequest.headers.Authorization = \`Bearer \${token}\`;
-
-        return api(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-export default api;
-EOL
-    fi
-
-    if [ ! -f "src/hooks/useAuth.js" ]; then
-        print_warning "Auth hook not found, creating default..."
-        cat > src/hooks/useAuth.js << EOL
+    # Create missing hook files
+    if [ ! -f "src/hooks/useDevices.js" ]; then
+        print_warning "useDevices.js not found, creating default..."
+        cat > src/hooks/useDevices.js << EOL
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import { getDevices, getDeviceStats } from '../services/api/deviceService';
 
-const useAuth = () => {
-  const [user, setUser] = useState(null);
+export const useDevices = () => {
+  const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchDevices = async () => {
       try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const response = await api.get('/auth/me');
-        setUser(response.data);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
+        const data = await getDevices();
+        setDevices(data);
+      } catch (err) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
+    fetchDevices();
   }, []);
 
-  const login = async (username, password) => {
+  const refreshDeviceStats = async (deviceId) => {
     try {
-      const response = await api.post('/auth/login', { username, password });
-      const { token, refreshToken, user } = response.data;
-
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('refresh_token', refreshToken);
-      setUser(user);
-
-      return true;
-    } catch (error) {
-      console.error('Login failed:', error);
-      return false;
+      const stats = await getDeviceStats(deviceId);
+      setDevices(prevDevices =>
+        prevDevices.map(device =>
+          device.id === deviceId ? { ...device, stats } : device
+        )
+      );
+    } catch (err) {
+      setError(err.message);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    setUser(null);
-    navigate('/login');
-  };
-
-  return { user, loading, login, logout };
+  return { devices, loading, error, refreshDeviceStats };
 };
-
-export default useAuth;
 EOL
     fi
 
-    if [ ! -f "src/context/AuthContext.js" ]; then
-        print_warning "Auth context not found, creating default..."
-        cat > src/context/AuthContext.js << EOL
-import React, { createContext, useContext } from 'react';
-import useAuth from '../hooks/useAuth';
+    if [ ! -f "src/hooks/useWebSocket.js" ]; then
+        print_warning "useWebSocket.js not found, creating default..."
+        cat > src/hooks/useWebSocket.js << EOL
+import { useEffect, useRef, useCallback } from 'react';
+import config from '../config';
 
-const AuthContext = createContext();
+export const useWebSocket = (onMessage) => {
+  const ws = useRef(null);
 
-export const AuthProvider = ({ children }) => {
-  const auth = useAuth();
+  const connect = useCallback(() => {
+    ws.current = new WebSocket(config.websocket.url);
+
+    ws.current.onopen = () => {
+      console.log('WebSocket connected');
+    };
+
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      onMessage(data);
+    };
+
+    ws.current.onclose = () => {
+      console.log('WebSocket disconnected');
+      setTimeout(connect, config.websocket.reconnectInterval);
+    };
+
+    ws.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  }, [onMessage]);
+
+  useEffect(() => {
+    connect();
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, [connect]);
+
+  const sendMessage = useCallback((message) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify(message));
+    }
+  }, []);
+
+  return { sendMessage };
+};
+EOL
+    fi
+
+    # Create missing context files
+    if [ ! -f "src/context/DeviceContext.js" ]; then
+        print_warning "DeviceContext.js not found, creating default..."
+        cat > src/context/DeviceContext.js << EOL
+import React, { createContext, useContext, useState } from 'react';
+import { useDevices } from '../hooks/useDevices';
+
+const DeviceContext = createContext();
+
+export const DeviceProvider = ({ children }) => {
+  const { devices, loading, error, refreshDeviceStats } = useDevices();
+  const [selectedDevice, setSelectedDevice] = useState(null);
+
+  const value = {
+    devices,
+    loading,
+    error,
+    selectedDevice,
+    setSelectedDevice,
+    refreshDeviceStats,
+  };
 
   return (
-    <AuthContext.Provider value={auth}>
+    <DeviceContext.Provider value={value}>
       {children}
-    </AuthContext.Provider>
+    </DeviceContext.Provider>
   );
 };
 
-export const useAuthContext = () => {
-  const context = useContext(AuthContext);
+export const useDeviceContext = () => {
+  const context = useContext(DeviceContext);
   if (!context) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
+    throw new Error('useDeviceContext must be used within a DeviceProvider');
   }
   return context;
 };
 EOL
     fi
 
-    if [ ! -f "src/components/Layout/MainLayout.js" ]; then
-        print_warning "Main layout component not found, creating default..."
-        mkdir -p src/components/Layout
-        cat > src/components/Layout/MainLayout.js << EOL
-import React from 'react';
-import { Box, CssBaseline } from '@mui/material';
-import { Outlet } from 'react-router-dom';
-import Header from './Header';
-import Sidebar from './Sidebar';
-
-const MainLayout = () => {
-  return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      <Header />
-      <Sidebar />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: \`calc(100% - 240px)\` },
-          ml: { sm: '240px' },
-          mt: '64px',
-        }}
-      >
-        <Outlet />
-      </Box>
-    </Box>
-  );
+    # Create missing configuration files
+    if [ ! -f "src/config.js" ]; then
+        print_warning "config.js not found, creating default..."
+        cat > src/config.js << EOL
+export default {
+  api: {
+    baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+    timeout: 10000,
+    retryAttempts: 3,
+  },
+  websocket: {
+    url: process.env.REACT_APP_WS_URL || 'ws://localhost:8000',
+    reconnectInterval: 5000,
+    maxReconnectAttempts: 5,
+  },
+  snmp: {
+    community: process.env.REACT_APP_SNMP_COMMUNITY || 'public',
+    version: process.env.REACT_APP_SNMP_VERSION || '2c',
+    timeout: 5000,
+    retries: 3,
+  },
+  auth: {
+    tokenKey: 'auth_token',
+    refreshTokenKey: 'refresh_token',
+    tokenExpiration: 3600,
+  },
+  pagination: {
+    defaultPageSize: 10,
+    pageSizeOptions: [10, 25, 50, 100],
+  },
+  charts: {
+    defaultColors: [
+      '#90caf9',
+      '#f48fb1',
+      '#66bb6a',
+      '#ffa726',
+      '#29b6f6',
+      '#ab47bc',
+      '#ec407a',
+      '#7e57c2',
+    ],
+  },
 };
-
-export default MainLayout;
 EOL
     fi
 
-    if [ ! -f "src/components/Layout/Header.js" ]; then
-        print_warning "Header component not found, creating default..."
-        cat > src/components/Layout/Header.js << EOL
-import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Box } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import { useAuthContext } from '../../context/AuthContext';
+    # Create missing style files
+    if [ ! -f "src/index.css" ]; then
+        print_warning "index.css not found, creating default..."
+        cat > src/index.css << EOL
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-const Header = () => {
-  const { user, logout } = useAuthContext();
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
 
-  return (
-    <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-      <Toolbar>
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          edge="start"
-          sx={{ mr: 2 }}
-        >
-          <MenuIcon />
-        </IconButton>
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Network Monitoring
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="body1" sx={{ mr: 2 }}>
-            {user?.username}
-          </Typography>
-          <IconButton
-            color="inherit"
-            onClick={logout}
-          >
-            <AccountCircle />
-          </IconButton>
-        </Box>
-      </Toolbar>
-    </AppBar>
-  );
-};
+* {
+  box-sizing: border-box;
+}
 
-export default Header;
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #616161;
+}
 EOL
     fi
 
-    if [ ! -f "src/components/Layout/Sidebar.js" ]; then
-        print_warning "Sidebar component not found, creating default..."
-        cat > src/components/Layout/Sidebar.js << EOL
-import React from 'react';
-import { Drawer, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import SettingsIcon from '@mui/icons-material/Settings';
-import DevicesIcon from '@mui/icons-material/Devices';
-import SecurityIcon from '@mui/icons-material/Security';
+    if [ ! -f "src/App.css" ]; then
+        print_warning "App.css not found, creating default..."
+        cat > src/App.css << EOL
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-const drawerWidth = 240;
+.main-content {
+  flex: 1;
+  padding: 20px;
+  margin-top: 64px;
+  margin-left: 240px;
+}
 
-const menuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-  { text: 'Devices', icon: <DevicesIcon />, path: '/devices' },
-  { text: 'Security', icon: <SecurityIcon />, path: '/security' },
-  { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+@media (max-width: 600px) {
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+/* Common utility classes */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-height {
+  height: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mt-4 { margin-top: 32px; }
+
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.mb-4 { margin-bottom: 32px; }
+
+.ml-1 { margin-left: 8px; }
+.ml-2 { margin-left: 16px; }
+.ml-3 { margin-left: 24px; }
+.ml-4 { margin-left: 32px; }
+
+.mr-1 { margin-right: 8px; }
+.mr-2 { margin-right: 16px; }
+.mr-3 { margin-right: 24px; }
+.mr-4 { margin-right: 32px; }
+
+.p-1 { padding: 8px; }
+.p-2 { padding: 16px; }
+.p-3 { padding: 24px; }
+.p-4 { padding: 32px; }
+EOL
+    fi
+
+    # Create missing test files
+    if [ ! -f "src/setupTests.js" ]; then
+        print_warning "setupTests.js not found, creating default..."
+        cat > src/setupTests.js << EOL
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
+
+// Mock matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
+// Mock ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+EOL
+    fi
+
+    # Create missing service worker
+    if [ ! -f "src/serviceWorker.js" ]; then
+        print_warning "serviceWorker.js not found, creating default..."
+        cat > src/serviceWorker.js << EOL
+// This service worker file is effectively a 'no-op' that will reset any
+// previous service worker registered for the same host:port combination.
+// In the production build, this file is replaced with an actual service worker
+// file that will precache your site's local assets.
+
+const CACHE_NAME = 'network-monitoring-cache-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/static/js/main.chunk.js',
+  '/static/css/main.chunk.css',
+  '/manifest.json',
+  '/favicon.ico',
 ];
 
-const Sidebar = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-        },
-      }}
-    >
-      <Toolbar />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => navigate(item.path)}
-            selected={location.pathname === item.path}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
-        ))}
-      </List>
-    </Drawer>
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(urlsToCache))
   );
-};
+});
 
-export default Sidebar;
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => response || fetch(event.request))
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
 EOL
+    fi
+
+    # Create missing test files
+    if [ ! -f "src/App.test.js" ]; then
+        print_warning "App.test.js not found, creating default..."
+        cat > src/App.test.js << EOL
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders welcome message', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/Welcome to Network Monitoring/i);
+  expect(linkElement).toBeInTheDocument();
+});
+EOL
+    fi
+
+    # Create missing public assets
+    if [ ! -f "public/favicon.ico" ]; then
+        print_warning "favicon.ico not found, creating default..."
+        touch public/favicon.ico
+    fi
+
+    if [ ! -f "public/logo192.png" ]; then
+        print_warning "logo192.png not found, creating default..."
+        touch public/logo192.png
+    fi
+
+    if [ ! -f "public/logo512.png" ]; then
+        print_warning "logo512.png not found, creating default..."
+        touch public/logo512.png
     fi
 
     npm install --no-audit --no-fund
