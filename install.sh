@@ -139,7 +139,23 @@ check_command "Git safe directory configuration"
 print_message "Cloning repository..."
 if [ -d ".git" ]; then
     print_warning "Repository already exists. Pulling latest changes..."
+    # Check for local changes
+    if git status --porcelain | grep -q "^ M"; then
+        print_warning "Local changes detected, stashing them..."
+        git stash
+        STASHED=true
+    else
+        STASHED=false
+    fi
+    
+    # Pull changes
     git pull
+    
+    # Restore stashed changes if any
+    if [ "$STASHED" = true ]; then
+        print_warning "Restoring stashed changes..."
+        git stash pop
+    fi
 else
     git clone https://github.com/bsnwgit/network-monitoring.git .
 fi
