@@ -148,12 +148,42 @@ if [ -f "backend/requirements.txt" ]; then
         package=$(echo "$line" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1)
         if ! apt install -y "python3-${package}" 2>/dev/null; then
             print_warning "Package python3-${package} not found in repositories, trying pip..."
-            pip3 install --no-cache-dir $package || print_warning "Failed to install $package"
+            pip3 install --break-system-packages $package || print_warning "Failed to install $package"
         fi
     done < backend/requirements.txt
 else
-    print_error "requirements.txt not found"
-    exit 1
+    print_warning "requirements.txt not found, creating default requirements..."
+    mkdir -p backend
+    cat > backend/requirements.txt << EOL
+flask==2.0.1
+flask-sqlalchemy==2.5.1
+flask-migrate==3.1.0
+flask-cors==3.0.10
+flask-jwt-extended==4.3.1
+psycopg2-binary==2.9.3
+redis==4.3.4
+pysnmp==4.4.12
+paramiko==2.11.0
+netaddr==0.8.0
+pyyaml==6.0
+pandas==1.4.2
+numpy==1.22.3
+matplotlib==3.5.1
+seaborn==0.11.2
+scipy==1.8.0
+requests==2.27.1
+cryptography==36.0.1
+bcrypt==3.2.0
+EOL
+    
+    # Install default requirements
+    while IFS= read -r line; do
+        package=$(echo "$line" | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1)
+        if ! apt install -y "python3-${package}" 2>/dev/null; then
+            print_warning "Package python3-${package} not found in repositories, trying pip..."
+            pip3 install --break-system-packages $package || print_warning "Failed to install $package"
+        fi
+    done < backend/requirements.txt
 fi
 check_command "Python dependencies installation"
 
