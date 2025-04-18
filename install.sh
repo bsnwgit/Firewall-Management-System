@@ -921,7 +921,6 @@ source ../venv/bin/activate
 
 # Install build dependencies in the virtual environment
 print_message "Installing build dependencies..."
-pip install --upgrade pip setuptools wheel
 pip install cython
 
 # Install project dependencies
