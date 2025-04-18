@@ -212,6 +212,181 @@ check_command "Python dependencies installation"
 print_message "Installing Node.js dependencies..."
 if [ -d "frontend" ]; then
     cd frontend
+    if [ ! -d "src/components" ]; then
+        mkdir -p src/components/Error src/components/Loading src/components/Notification
+    fi
+
+    if [ ! -f "src/components/Error/ErrorBoundary.js" ]; then
+        print_warning "ErrorBoundary component not found, creating default..."
+        cat > src/components/Error/ErrorBoundary.js << EOL
+import React from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { Box, Typography, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
+function ErrorFallback({ error, resetErrorBoundary }) {
+  const navigate = useNavigate();
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        p: 3,
+        textAlign: 'center',
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        Something went wrong
+      </Typography>
+      <Typography variant="body1" color="error" paragraph>
+        {error.message}
+      </Typography>
+      <Box sx={{ mt: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={resetErrorBoundary}
+          sx={{ mr: 2 }}
+        >
+          Try again
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => navigate('/')}
+        >
+          Go to home
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+export default function AppErrorBoundary({ children }) {
+  return (
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onReset={() => window.location.reload()}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+}
+EOL
+    fi
+
+    if [ ! -f "src/components/Loading/LoadingSpinner.js" ]; then
+        print_warning "LoadingSpinner component not found, creating default..."
+        cat > src/components/Loading/LoadingSpinner.js << EOL
+import React from 'react';
+import { Box, CircularProgress, Typography } from '@mui/material';
+
+const LoadingSpinner = ({ message = 'Loading...' }) => {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '200px',
+      }}
+    >
+      <CircularProgress size={40} />
+      <Typography variant="body1" sx={{ mt: 2 }}>
+        {message}
+      </Typography>
+    </Box>
+  );
+};
+
+export default LoadingSpinner;
+EOL
+    fi
+
+    if [ ! -f "src/components/Notification/ToastContainer.js" ]; then
+        print_warning "ToastContainer component not found, creating default..."
+        cat > src/components/Notification/ToastContainer.js << EOL
+import React from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+const AppToastContainer = () => {
+  return (
+    <ToastContainer
+      position="top-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+    />
+  );
+};
+
+export default AppToastContainer;
+EOL
+    fi
+
+    if [ ! -f "src/utils/notifications.js" ]; then
+        print_warning "Notifications utility not found, creating default..."
+        cat > src/utils/notifications.js << EOL
+import { toast } from 'react-toastify';
+
+export const showSuccess = (message) => {
+  toast.success(message, {
+    position: 'top-right',
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+  });
+};
+
+export const showError = (message) => {
+  toast.error(message, {
+    position: 'top-right',
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+  });
+};
+
+export const showWarning = (message) => {
+  toast.warning(message, {
+    position: 'top-right',
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+  });
+};
+
+export const showInfo = (message) => {
+  toast.info(message, {
+    position: 'top-right',
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+  });
+};
+EOL
+    fi
+
     if [ ! -f "package.json" ]; then
         print_warning "package.json not found, creating default..."
         cat > package.json << EOL
@@ -235,13 +410,28 @@ if [ -d "frontend" ]; then
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.6.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "react-query": "^3.39.3",
+    "react-error-boundary": "^3.1.4",
+    "react-toastify": "^9.1.3",
+    "react-helmet-async": "^1.3.0",
+    "react-i18next": "^13.2.2",
+    "i18next": "^23.4.6",
+    "i18next-browser-languagedetector": "^7.1.0",
+    "i18next-http-backend": "^2.1.1",
+    "date-fns": "^2.30.0",
+    "lodash": "^4.17.21",
+    "formik": "^2.4.2",
+    "yup": "^1.2.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint src/**/*.{js,jsx}",
+    "format": "prettier --write src/**/*.{js,jsx,css,scss}",
+    "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "eslintConfig": {
     "extends": [
@@ -260,117 +450,451 @@ if [ -d "frontend" ]; then
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "prettier": "^2.8.8",
+    "eslint-plugin-prettier": "^5.0.1",
+    "eslint-config-prettier": "^9.0.0",
+    "source-map-explorer": "^2.5.3"
   }
 }
 EOL
     fi
-    
+
     if [ ! -d "src" ]; then
         print_warning "src directory not found, creating default structure..."
-        mkdir -p src/components src/pages src/utils src/assets
-        cat > src/App.js << EOL
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
+        mkdir -p src/components src/pages src/utils src/assets src/services src/hooks src/context src/locales src/layouts src/theme
+    fi
+
+    if [ ! -f "src/theme/theme.js" ]; then
+        print_warning "theme.js not found, creating default..."
+        cat > src/theme/theme.js << EOL
+import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
       main: '#90caf9',
+      light: '#e3f2fd',
+      dark: '#42a5f5',
     },
     secondary: {
       main: '#f48fb1',
+      light: '#f8bbd0',
+      dark: '#f06292',
+    },
+    error: {
+      main: '#f44336',
+      light: '#e57373',
+      dark: '#d32f2f',
+    },
+    warning: {
+      main: '#ffa726',
+      light: '#ffb74d',
+      dark: '#f57c00',
+    },
+    info: {
+      main: '#29b6f6',
+      light: '#4fc3f7',
+      dark: '#0288d1',
+    },
+    success: {
+      main: '#66bb6a',
+      light: '#81c784',
+      dark: '#388e3c',
+    },
+    background: {
+      default: '#121212',
+      paper: '#1e1e1e',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 500,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 500,
+    },
+    h3: {
+      fontSize: '1.75rem',
+      fontWeight: 500,
+    },
+    h4: {
+      fontSize: '1.5rem',
+      fontWeight: 500,
+    },
+    h5: {
+      fontSize: '1.25rem',
+      fontWeight: 500,
+    },
+    h6: {
+      fontSize: '1rem',
+      fontWeight: 500,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
     },
   },
 });
 
-function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <Routes>
-          <Route path="/" element={<div>Welcome to Network Monitoring</div>} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
-  );
-}
-
-export default App;
-EOL
-
-        cat > src/index.js << EOL
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+export default theme;
 EOL
     fi
 
-    if [ ! -d "public" ]; then
-        print_warning "public directory not found, creating it..."
-        mkdir -p public
-        cat > public/index.html << EOL
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Network Monitoring System"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>Network Monitoring</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-  </body>
-</html>
-EOL
-
-        cat > public/manifest.json << EOL
+    if [ ! -f "src/locales/en/translation.json" ]; then
+        print_warning "English translations not found, creating default..."
+        mkdir -p src/locales/en
+        cat > src/locales/en/translation.json << EOL
 {
-  "short_name": "Network Monitor",
-  "name": "Network Monitoring System",
-  "icons": [
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Operation successful",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Overview",
+    "alerts": "Alerts",
+    "performance": "Performance",
+    "devices": "Devices"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "preferences": "Preferences"
+  }
 }
 EOL
     fi
-    
+
+    if [ ! -f "src/utils/api.js" ]; then
+        print_warning "API utility not found, creating default..."
+        cat > src/utils/api.js << EOL
+import axios from 'axios';
+import config from '../config';
+
+const api = axios.create({
+  baseURL: config.api.baseUrl,
+  timeout: config.api.timeout,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = \`Bearer \${token}\`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        const response = await api.post('/auth/refresh', { refreshToken });
+        const { token } = response.data;
+
+        localStorage.setItem('auth_token', token);
+        originalRequest.headers.Authorization = \`Bearer \${token}\`;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+EOL
+    fi
+
+    if [ ! -f "src/hooks/useAuth.js" ]; then
+        print_warning "Auth hook not found, creating default..."
+        cat > src/hooks/useAuth.js << EOL
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
+
+const useAuth = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await api.get('/auth/me');
+        setUser(response.data);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('refresh_token');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const login = async (username, password) => {
+    try {
+      const response = await api.post('/auth/login', { username, password });
+      const { token, refreshToken, user } = response.data;
+
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('refresh_token', refreshToken);
+      setUser(user);
+
+      return true;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    setUser(null);
+    navigate('/login');
+  };
+
+  return { user, loading, login, logout };
+};
+
+export default useAuth;
+EOL
+    fi
+
+    if [ ! -f "src/context/AuthContext.js" ]; then
+        print_warning "Auth context not found, creating default..."
+        cat > src/context/AuthContext.js << EOL
+import React, { createContext, useContext } from 'react';
+import useAuth from '../hooks/useAuth';
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const auth = useAuth();
+
+  return (
+    <AuthContext.Provider value={auth}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuthContext must be used within an AuthProvider');
+  }
+  return context;
+};
+EOL
+    fi
+
+    if [ ! -f "src/components/Layout/MainLayout.js" ]; then
+        print_warning "Main layout component not found, creating default..."
+        mkdir -p src/components/Layout
+        cat > src/components/Layout/MainLayout.js << EOL
+import React from 'react';
+import { Box, CssBaseline } from '@mui/material';
+import { Outlet } from 'react-router-dom';
+import Header from './Header';
+import Sidebar from './Sidebar';
+
+const MainLayout = () => {
+  return (
+    <Box sx={{ display: 'flex' }}>
+      <CssBaseline />
+      <Header />
+      <Sidebar />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: { sm: \`calc(100% - 240px)\` },
+          ml: { sm: '240px' },
+          mt: '64px',
+        }}
+      >
+        <Outlet />
+      </Box>
+    </Box>
+  );
+};
+
+export default MainLayout;
+EOL
+    fi
+
+    if [ ! -f "src/components/Layout/Header.js" ]; then
+        print_warning "Header component not found, creating default..."
+        cat > src/components/Layout/Header.js << EOL
+import React from 'react';
+import { AppBar, Toolbar, Typography, IconButton, Box } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import { useAuthContext } from '../../context/AuthContext';
+
+const Header = () => {
+  const { user, logout } = useAuthContext();
+
+  return (
+    <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+      <Toolbar>
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          sx={{ mr: 2 }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          Network Monitoring
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant="body1" sx={{ mr: 2 }}>
+            {user?.username}
+          </Typography>
+          <IconButton
+            color="inherit"
+            onClick={logout}
+          >
+            <AccountCircle />
+          </IconButton>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default Header;
+EOL
+    fi
+
+    if [ ! -f "src/components/Layout/Sidebar.js" ]; then
+        print_warning "Sidebar component not found, creating default..."
+        cat > src/components/Layout/Sidebar.js << EOL
+import React from 'react';
+import { Drawer, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SettingsIcon from '@mui/icons-material/Settings';
+import DevicesIcon from '@mui/icons-material/Devices';
+import SecurityIcon from '@mui/icons-material/Security';
+
+const drawerWidth = 240;
+
+const menuItems = [
+  { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+  { text: 'Devices', icon: <DevicesIcon />, path: '/devices' },
+  { text: 'Security', icon: <SecurityIcon />, path: '/security' },
+  { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+];
+
+const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+        },
+      }}
+    >
+      <Toolbar />
+      <List>
+        {menuItems.map((item) => (
+          <ListItem
+            button
+            key={item.text}
+            onClick={() => navigate(item.path)}
+            selected={location.pathname === item.path}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.text} />
+          </ListItem>
+        ))}
+      </List>
+    </Drawer>
+  );
+};
+
+export default Sidebar;
+EOL
+    fi
+
     npm install --no-audit --no-fund
     cd ..
 else
@@ -427,12 +951,49 @@ else
 }
 EOL
 
-    mkdir -p src/components src/pages src/utils src/assets
+    mkdir -p src/components src/pages src/utils src/assets src/services src/hooks src/context
+    cat > src/index.js << EOL
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+EOL
+
+    cat > src/reportWebVitals.js << EOL
+const reportWebVitals = (onPerfEntry) => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+EOL
+
     cat > src/App.js << EOL
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import './App.css';
 
 const theme = createTheme({
   palette: {
@@ -460,19 +1021,6 @@ function App() {
 }
 
 export default App;
-EOL
-
-    cat > src/index.js << EOL
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
 EOL
 
     mkdir -p public
@@ -525,6 +1073,12 @@ EOL
   "theme_color": "#000000",
   "background_color": "#ffffff"
 }
+EOL
+
+    cat > public/robots.txt << EOL
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow:
 EOL
 
     npm install --no-audit --no-fund
