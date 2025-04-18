@@ -907,6 +907,15 @@ cd frontend
 npm run build
 cd ..
 
+# Create and activate Python virtual environment
+print_message "Creating Python virtual environment..."
+cd backend
+python3 -m venv ../venv
+source ../venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+cd ..
+
 # Enable and start services
 print_message "Starting services..."
 systemctl daemon-reload
