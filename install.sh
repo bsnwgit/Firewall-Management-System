@@ -216,6 +216,80 @@ if [ -d "frontend" ]; then
         mkdir -p src
     fi
 
+    # Create theme directory and theme.js if they don't exist
+    if [ ! -d "src/theme" ]; then
+        mkdir -p src/theme
+    fi
+
+    if [ ! -f "src/theme/theme.js" ]; then
+        print_warning "theme.js not found, creating default..."
+        cat > src/theme/theme.js << EOL
+import { createTheme } from '@mui/material/styles';
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#90caf9',
+      light: '#e3f2fd',
+      dark: '#42a5f5',
+    },
+    secondary: {
+      main: '#f48fb1',
+      light: '#f8bbd0',
+      dark: '#f06292',
+    },
+    background: {
+      default: '#121212',
+      paper: '#1e1e1e',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: 'rgba(255, 255, 255, 0.7)',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 500,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 500,
+    },
+    h3: {
+      fontSize: '1.75rem',
+      fontWeight: 500,
+    },
+    h4: {
+      fontSize: '1.5rem',
+      fontWeight: 500,
+    },
+    h5: {
+      fontSize: '1.25rem',
+      fontWeight: 500,
+    },
+    h6: {
+      fontSize: '1rem',
+      fontWeight: 500,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+        },
+      },
+    },
+  },
+});
+
+export default theme;
+EOL
+    fi
+
     # Create App.js if it doesn't exist
     if [ ! -f "src/App.js" ]; then
         print_warning "App.js not found, creating default..."
