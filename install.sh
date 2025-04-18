@@ -84,7 +84,7 @@ check_command "System update"
 
 # Install required system packages
 print_message "Installing system dependencies..."
-apt install -y python3 python3-pip python3-full git build-essential libssl-dev libffi-dev python3-dev curl wget unzip make gcc g++ snmp snmpd tcpdump net-tools iproute2 iptables nginx redis-server postgresql postgresql-contrib libpq-dev libsnmp-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype-dev libblas-dev liblapack-dev libatlas-base-dev gfortran python3-pysnmp4 python3-psycopg2 python3-redis python3-flask python3-flask-sqlalchemy python3-flask-migrate python3-flask-cors python3-jwt python3-cryptography python3-pandas python3-numpy python3-matplotlib python3-seaborn python3-scipy python3-requests python3-paramiko python3-netaddr python3-yaml python3-jinja2 python3-markupsafe python3-werkzeug python3-click python3-itsdangerous python3-six python3-dateutil python3-urllib3 python3-chardet python3-certifi python3-idna python3-requests-oauthlib python3-oauthlib python3-bcrypt python3-cffi python3-pycparser python3-asn1crypto python3-cryptography python3-future python3-pytz python3-configparser python3-pathlib2 python3-scandir logrotate rsyslog htop iotop iftop nethogs ufw fail2ban rsync ntp sysstat supervisor
+apt install -y python3 python3-pip python3-full git build-essential libssl-dev libffi-dev python3-dev curl wget unzip make gcc g++ snmp snmpd tcpdump net-tools iproute2 iptables nginx redis-server postgresql postgresql-contrib libpq-dev libsnmp-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev libjpeg-dev libpng-dev libfreetype-dev libblas-dev liblapack-dev libatlas-base-dev gfortran python3-pysnmp4 python3-psycopg2 python3-redis python3-flask python3-flask-sqlalchemy python3-flask-migrate python3-flask-cors python3-jwt python3-cryptography python3-pandas python3-numpy python3-matplotlib python3-seaborn python3-scipy python3-requests python3-paramiko python3-netaddr python3-yaml python3-jinja2 python3-markupsafe python3-werkzeug python3-click python3-itsdangerous python3-six python3-dateutil python3-urllib3 python3-chardet python3-certifi python3-idna python3-requests-oauthlib python3-oauthlib python3-bcrypt python3-cffi python3-pycparser python3-asn1crypto python3-cryptography python3-future logrotate rsyslog htop iotop iftop nethogs ufw fail2ban rsync ntp sysstat supervisor
 check_command "System dependencies installation"
 
 # Verify critical packages
@@ -102,9 +102,8 @@ apt install -y pipx
 pipx ensurepath
 check_command "pipx installation"
 
-# Install additional Python packages using apt
+# Install additional Python packages using pip with --break-system-packages
 print_message "Installing additional Python packages..."
-apt install -y python3-pytz python3-configparser python3-pathlib2 python3-scandir || print_warning "Some packages not available via apt, installing via pip with --break-system-packages"
 pip3 install --break-system-packages pytz configparser pathlib2 scandir
 check_command "Additional Python packages installation"
 
